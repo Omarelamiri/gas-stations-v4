@@ -13,7 +13,6 @@ export default function AuthenticatedLayout({
 }) {
   const { logout, currentUser } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
