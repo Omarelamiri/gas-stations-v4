@@ -6,36 +6,40 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { AuthContextType } from './types';
 
-interface AuthContextType {
-  currentUser: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  loading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
+  return ctx;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Optional: ensure local persistence (keeps user after refresh)
+  useEffect(() => {
+    setPersistence(auth, browserLocalPersistence).catch(() => {
+      /* ignore if already set in another tab */
+    });
+  }, []);
+
   const signup = async (email: string, password: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    setCurrentUser(userCredential.user);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    setCurrentUser(cred.user);
   };
 
   const login = async (email: string, password: string) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    setCurrentUser(userCredential.user);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    setCurrentUser(cred.user);
   };
 
   const logout = async () => {
@@ -44,21 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
     });
-    return unsubscribe;
+    return unsub;
   }, []);
 
-  const value: AuthContextType = {
-    currentUser,
-    login,
-    signup,
-    logout,
-    loading
-  };
-
-  // Always render children; let pages handle loading if needed
+  const value: AuthContextType = { currentUser, loading, login, signup, logout };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

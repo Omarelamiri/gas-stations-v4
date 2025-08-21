@@ -1,8 +1,9 @@
 import { User } from 'firebase/auth';
 
-export type AuthUser = User | null;
 export interface AuthContextType {
-  user: AuthUser;
+  currentUser: User | null;
   loading: boolean;
-  signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
