@@ -1,4 +1,3 @@
-// useGasStations.ts
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
@@ -11,18 +10,13 @@ export const useGasStations = () => {
     const [error, setError] = useState<string | null>(null);
 
     const refetch = useCallback(() => {
-        // Since onSnapshot is a real-time listener, forcing a "refetch" isn't necessary for data
-        // consistency. The hook will automatically update. However, to satisfy the `refetch`
-        // dependency in other hooks, we can just log or manage a state.
-        // A more complex implementation might detach the listener and re-attach it.
-        // For simplicity, we can just manage the loading state.
         console.log("Forcing data refetch...");
     }, []);
 
     useEffect(() => {
         const q = query(
-            collection(db, "gasStations"),
-            orderBy("updatedAt", "desc")
+            collection(db, "gasStations"), // UPDATE collection name if needed
+            orderBy("Date Creation", "desc")
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -30,31 +24,28 @@ export const useGasStations = () => {
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
 
-                const cleanPrices: Record<string, number> = {};
-                if (data.prices && typeof data.prices === 'object') {
-                    Object.entries(data.prices).forEach(([key, value]) => {
-                        if (typeof value === 'number') {
-                            cleanPrices[key] = value;
-                        }
-                    });
-                }
-
                 fetchedStations.push({
                     id: doc.id,
-                    name: data.name || 'Unknown Station',
-                    address: data.address || 'No address',
-                    brand: data.brand || 'Unknown Brand',
-                    city: data.city || 'Unknown City',
-                    fuelTypes: data.fuelTypes || [],
-                    hasShop: data.hasShop || false,
-                    location: {
-                        latitude: data.location?.latitude || 0,
-                        longitude: data.location?.longitude || 0
-                    },
-                    openHours: data.openHours || '24/7',
-                    prices: cleanPrices,
-                    services: data.services || [],
-                    updatedAt: data.updatedAt,
+                    'Raison sociale': data['Raison sociale'] || '',
+                    'Marque': data['Marque'] || 'Unknown Brand',
+                    'Nom de Station': data['Nom de Station'] || 'Unknown Station',
+                    'Propriétaire': data['Propriétaire'] || '',
+                    'Gérant': data['Gérant'] || '',
+                    'CIN Gérant': data['CIN Gérant'] || '',
+                    'Adesse': data['Adesse'] || 'No address',
+                    'Latitude': data['Latitude'] || 0,
+                    'Longitude': data['Longitude'] || 0,
+                    'Commune': data['Commune'] || '',
+                    'Province': data['Province'] || 'Unknown Province',
+                    'Type': data['Type'] || 'service',
+                    'Type Autorisation': data['Type Autorisation'] || 'création',
+                    'Date Creation': data['Date Creation']?.toDate() || new Date(),
+                    'numéro de création': data['numéro de création'] || '',
+                    'Date Mise en service': data['Date Mise en service']?.toDate() || new Date(),
+                    'numéro de Mise en service': data['numéro de Mise en service'] || '',
+                    'Capacité Gasoil': data['Capacité Gasoil'] || 0,
+                    'Capacité SSP': data['Capacité SSP'] || 0,
+                    'numéro de Téléphone': data['numéro de Téléphone'] || '',
                 });
             });
             setStations(fetchedStations);
@@ -66,10 +57,8 @@ export const useGasStations = () => {
             setLoading(false);
         });
 
-        // Cleanup function
         return () => unsubscribe();
     }, []);
 
-    // Return the refetch function along with the data
     return { stations, loading, error, refetch };
 };

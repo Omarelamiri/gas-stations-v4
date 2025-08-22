@@ -2,7 +2,7 @@
 
 import { useStationForm } from '@/hooks/useStationForm';
 import { GasStation } from '@/types/station';
-import  Button  from '@/components/ui/Button';
+import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
@@ -41,51 +41,58 @@ export function StationForm({ mode, station, onSuccess, onCancel }: StationFormP
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="Station Name"
-            name="name"
-            value={formData.name}
-            onChange={(e) => updateField('name', e.target.value)}
-            error={errors.name}
+            name="Nom de Station"
+            value={formData['Nom de Station']}
+            onChange={(e) => updateField('Nom de Station', e.target.value)}
+            error={errors['Nom de Station']}
             required
             placeholder="Enter station name"
           />
 
           <Input
+            label="Social Reason"
+            name="Raison sociale"
+            value={formData['Raison sociale']}
+            onChange={(e) => updateField('Raison sociale', e.target.value)}
+            error={errors['Raison sociale']}
+            placeholder="Company social reason"
+          />
+
+          <Input
             label="Brand"
-            name="brand"
-            value={formData.brand}
-            onChange={(e) => updateField('brand', e.target.value)}
-            error={errors.brand}
+            name="Marque"
+            value={formData['Marque']}
+            onChange={(e) => updateField('Marque', e.target.value)}
+            error={errors['Marque']}
             placeholder="e.g. Shell, Total, Afriquia"
           />
 
           <Input
-            label="Address"
-            name="address"
-            value={formData.address}
-            onChange={(e) => updateField('address', e.target.value)}
-            error={errors.address}
-            required
-            placeholder="Full address"
-            className="md:col-span-2"
+            label="Owner"
+            name="Propriétaire"
+            value={formData['Propriétaire']}
+            onChange={(e) => updateField('Propriétaire', e.target.value)}
+            error={errors['Propriétaire']}
+            placeholder="Owner name"
           />
 
           <Input
-            label="City"
-            name="city"
-            value={formData.city}
-            onChange={(e) => updateField('city', e.target.value)}
-            error={errors.city}
+            label="Manager"
+            name="Gérant"
+            value={formData['Gérant']}
+            onChange={(e) => updateField('Gérant', e.target.value)}
+            error={errors['Gérant']}
             required
-            placeholder="City name"
+            placeholder="Manager name"
           />
 
           <Input
-            label="Open Hours"
-            name="openHours"
-            value={formData.openHours}
-            onChange={(e) => updateField('openHours', e.target.value)}
-            error={errors.openHours}
-            placeholder="e.g. 24/7 or 06:00-22:00"
+            label="Manager CIN"
+            name="CIN Gérant"
+            value={formData['CIN Gérant']}
+            onChange={(e) => updateField('CIN Gérant', e.target.value)}
+            error={errors['CIN Gérant']}
+            placeholder="Manager ID number"
           />
         </div>
       </div>
@@ -95,80 +102,184 @@ export function StationForm({ mode, station, onSuccess, onCancel }: StationFormP
         <h3 className="text-lg font-medium text-gray-900 mb-4">Location</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
+            label="Address"
+            name="Adesse"
+            value={formData['Adesse']}
+            onChange={(e) => updateField('Adesse', e.target.value)}
+            error={errors['Adesse']}
+            required
+            placeholder="Full address"
+            className="md:col-span-2"
+          />
+
+          <Input
+            label="Commune"
+            name="Commune"
+            value={formData['Commune']}
+            onChange={(e) => updateField('Commune', e.target.value)}
+            error={errors['Commune']}
+            placeholder="Commune name"
+          />
+
+          <Input
+            label="Province"
+            name="Province"
+            value={formData['Province']}
+            onChange={(e) => updateField('Province', e.target.value)}
+            error={errors['Province']}
+            required
+            placeholder="Province name"
+          />
+
+          <Input
             label="Latitude"
-            name="latitude"
+            name="Latitude"
             type="number"
             step="any"
-            value={formData.latitude}
-            onChange={(e) => updateField('latitude', e.target.value)}
-            error={errors.latitude}
+            value={formData['Latitude']}
+            onChange={(e) => updateField('Latitude', e.target.value)}
+            error={errors['Latitude']}
             placeholder="e.g. 34.020882"
           />
 
           <Input
             label="Longitude"
-            name="longitude"
+            name="Longitude"
             type="number"
             step="any"
-            value={formData.longitude}
-            onChange={(e) => updateField('longitude', e.target.value)}
-            error={errors.longitude}
+            value={formData['Longitude']}
+            onChange={(e) => updateField('Longitude', e.target.value)}
+            error={errors['Longitude']}
             placeholder="e.g. -6.841650"
           />
         </div>
-        <p className="mt-2 text-sm text-gray-500">
-          Enter coordinates for map display. Leave empty if unknown.
-        </p>
       </div>
 
-      {/* Fuel Prices */}
+      {/* Type and Authorization */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Fuel Prices (MAD)</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Type & Authorization</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData['Type']}
+              onChange={(e) => updateField('Type', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="service">Service</option>
+              <option value="remplissage">Remplissage</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Authorization Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData['Type Autorisation']}
+              onChange={(e) => updateField('Type Autorisation', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="création">Création</option>
+              <option value="transformation">Transformation</option>
+              <option value="transfert">Transfert</option>
+              <option value="changement de marques">Changement de marques</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Numbers and Dates */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Creation & Service Info</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Diesel Price"
-            name="dieselPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.dieselPrice}
-            onChange={(e) => updateField('dieselPrice', e.target.value)}
-            error={errors.dieselPrice}
-            placeholder="e.g. 12.50"
+            label="Creation Number"
+            name="numéro de création"
+            value={formData['numéro de création']}
+            onChange={(e) => updateField('numéro de création', e.target.value)}
+            error={errors['numéro de création']}
+            required
+            placeholder="Creation number"
           />
 
           <Input
-            label="Gasoline 95 Price"
-            name="gasoline95Price"
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.gasoline95Price}
-            onChange={(e) => updateField('gasoline95Price', e.target.value)}
-            error={errors.gasoline95Price}
-            placeholder="e.g. 13.20"
+            label="Service Number"
+            name="numéro de Mise en service"
+            value={formData['numéro de Mise en service']}
+            onChange={(e) => updateField('numéro de Mise en service', e.target.value)}
+            error={errors['numéro de Mise en service']}
+            required
+            placeholder="Service number"
+          />
+
+          <Input
+            label="Creation Date"
+            name="Date Creation"
+            type="date"
+            value={formData['Date Creation']}
+            onChange={(e) => updateField('Date Creation', e.target.value)}
+            error={errors['Date Creation']}
+            required
+          />
+
+          <Input
+            label="Service Date"
+            name="Date Mise en service"
+            type="date"
+            value={formData['Date Mise en service']}
+            onChange={(e) => updateField('Date Mise en service', e.target.value)}
+            error={errors['Date Mise en service']}
+            required
           />
         </div>
-        <p className="mt-2 text-sm text-gray-500">
-          Enter current fuel prices per liter. Leave empty if not available.
-        </p>
       </div>
 
-      {/* Services */}
+      {/* Capacities */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Services</h3>
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="hasShop"
-            checked={formData.hasShop}
-            onChange={(e) => updateField('hasShop', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Capacities (Liters)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Gasoil Capacity"
+            name="Capacité Gasoil"
+            type="number"
+            min="0"
+            value={formData['Capacité Gasoil']}
+            onChange={(e) => updateField('Capacité Gasoil', e.target.value)}
+            error={errors['Capacité Gasoil']}
+            required
+            placeholder="e.g. 50000"
           />
-          <label htmlFor="hasShop" className="ml-2 text-sm text-gray-900">
-            Has convenience store/shop
-          </label>
+
+          <Input
+            label="SSP Capacity"
+            name="Capacité SSP"
+            type="number"
+            min="0"
+            value={formData['Capacité SSP']}
+            onChange={(e) => updateField('Capacité SSP', e.target.value)}
+            error={errors['Capacité SSP']}
+            required
+            placeholder="e.g. 30000"
+          />
         </div>
+      </div>
+
+      {/* Contact */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
+        <Input
+          label="Phone Number"
+          name="numéro de Téléphone"
+          value={formData['numéro de Téléphone']}
+          onChange={(e) => updateField('numéro de Téléphone', e.target.value)}
+          error={errors['numéro de Téléphone']}
+          placeholder="Phone number"
+        />
       </div>
 
       {/* Form Errors */}

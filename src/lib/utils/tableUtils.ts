@@ -12,12 +12,14 @@ export function filterStations(stations: GasStation[], searchQuery: string): Gas
   const query = searchQuery.toLowerCase().trim();
   
   return stations.filter(station => {
-    // Search in name, address, city, and brand
+    // Search in name, address, province, brand, and manager
     const searchableText = [
-      station.name,
-      station.address,
-      station.city,
-      station.brand
+      station['Nom de Station'],
+      station['Adesse'],
+      station['Province'],
+      station['Marque'],
+      station['Gérant'],
+      station['Propriétaire']
     ].join(' ').toLowerCase();
     
     return searchableText.includes(query);

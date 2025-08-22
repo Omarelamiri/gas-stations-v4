@@ -41,43 +41,40 @@ export function StationsTable({
   // Define table columns
   const columns: TableColumn[] = [
     {
-      key: 'name',
-      label: 'Name',
+      key: 'Nom de Station',
+      label: 'Station Name',
       sortable: true,
       width: 'w-1/5'
     },
     {
-      key: 'brand',
+      key: 'Marque',
       label: 'Brand',
       sortable: true,
       width: 'w-32'
     },
     {
-      key: 'city',
-      label: 'City',
+      key: 'Province',
+      label: 'Province',
       sortable: true,
       width: 'w-32'
     },
     {
-      key: 'prices.diesel',
-      label: 'Diesel',
+      key: 'Type',
+      label: 'Type',
       sortable: true,
-      width: 'w-24',
-      render: (value) => formatPrice(value)
+      width: 'w-24'
     },
     {
-      key: 'prices.gasoline95',
-      label: 'Gasoline 95',
+      key: 'Gérant',
+      label: 'Manager',
       sortable: true,
-      width: 'w-28',
-      render: (value) => formatPrice(value)
+      width: 'w-32'
     },
     {
-      key: 'hasShop',
-      label: 'Shop',
+      key: 'numéro de Téléphone',
+      label: 'Phone',
       sortable: true,
-      width: 'w-20',
-      render: (value) => value ? '✓' : '✗'
+      width: 'w-32'
     },
     {
       key: 'actions',

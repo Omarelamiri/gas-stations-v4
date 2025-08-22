@@ -36,10 +36,10 @@ export function MapPreview({ stations }: MapPreviewProps) {
       let hasValidCoordinates = false;
 
       stations.forEach(station => {
-        if (station.location?.latitude && station.location?.longitude) {
+        if (station['Latitude'] && station['Longitude']) {
           bounds.extend({
-            lat: station.location.latitude,
-            lng: station.location.longitude,
+            lat: station['Latitude'],
+            lng: station['Longitude'],
           });
           hasValidCoordinates = true;
         }
@@ -110,7 +110,7 @@ export function MapPreview({ stations }: MapPreviewProps) {
     >
       {stations.map(station => {
         // Skip stations without valid coordinates
-        if (!station.location?.latitude || !station.location?.longitude) {
+        if (!station['Latitude'] || !station['Longitude']) {
           return null;
         }
 
@@ -118,59 +118,39 @@ export function MapPreview({ stations }: MapPreviewProps) {
           <Marker
             key={station.id}
             position={{
-              lat: station.location.latitude,
-              lng: station.location.longitude,
+              lat: station['Latitude'],
+              lng: station['Longitude'],
             }}
             onClick={() => handleMarkerClick(station)}
-            title={station.name}
+            title={station['Nom de Station']}
           />
         );
       })}
 
-      {selectedStation && selectedStation.location?.latitude && selectedStation.location?.longitude && (
+      {selectedStation && selectedStation['Latitude'] && selectedStation['Longitude'] && (
         <InfoWindow
           position={{
-            lat: selectedStation.location.latitude,
-            lng: selectedStation.location.longitude,
+            lat: selectedStation['Latitude'],
+            lng: selectedStation['Longitude'],
           }}
           onCloseClick={handleInfoWindowClose}
         >
           <div className="p-2 max-w-xs">
             <h3 className="font-bold text-gray-900 mb-1">
-              {selectedStation.name}
+              {selectedStation['Nom de Station']}
             </h3>
             <p className="text-sm text-gray-600 mb-2">
-              {selectedStation.address}
+              {selectedStation['Adesse']}
             </p>
             <p className="text-sm text-gray-600 mb-2">
-              {selectedStation.city} • {selectedStation.brand}
+              {selectedStation['Province']} • {selectedStation['Marque']}
             </p>
-            
-            {/* Fuel Prices */}
-            {selectedStation.prices && Object.keys(selectedStation.prices).length > 0 && (
-              <div className="mb-2">
-                <p className="text-xs font-medium text-gray-700 mb-1">Prices:</p>
-                <div className="text-xs space-y-1">
-                  {Object.entries(selectedStation.prices).map(([fuel, price]) => (
-                    <div key={fuel} className="flex justify-between">
-                      <span className="capitalize">{fuel}:</span>
-                      <span className="font-medium">{price} MAD</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Additional Info */}
+            <p className="text-sm text-gray-600 mb-2">
+              Manager: {selectedStation['Gérant']}
+            </p>
             <div className="text-xs text-gray-500">
-              {selectedStation.hasShop && (
-                <span className="inline-block bg-green-100 text-green-700 px-2 py-1 rounded-full mr-1 mb-1">
-                  Shop
-                </span>
-              )}
-              {selectedStation.openHours && (
-                <span className="block">{selectedStation.openHours}</span>
-              )}
+              <p>Type: {selectedStation['Type']}</p>
+              <p>Phone: {selectedStation['numéro de Téléphone']}</p>
             </div>
           </div>
         </InfoWindow>
