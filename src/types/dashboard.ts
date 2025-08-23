@@ -22,9 +22,9 @@ export interface StationFiltersState {
 }
 
 export interface StationFiltersActions {
-  updateCityFilter: (city: string, isSelected: boolean) => void;
-  selectAllCities: () => void;
-  clearAllCities: () => void;
+  updateProvinceFilter: (province: string, isSelected: boolean) => void;
+  selectAllProvinces: () => void;
+  clearAllProvinces: () => void;
 }
 
 export interface DashboardData {

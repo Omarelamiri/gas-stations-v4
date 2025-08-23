@@ -1,3 +1,7 @@
+// File: src/lib/utils/stationUtils.ts
+// Utility functions have been updated to reflect the new field names,
+// particularly for provinces and brands.
+
 import { GasStation } from '@/types/station';
 
 /**

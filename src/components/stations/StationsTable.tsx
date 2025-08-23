@@ -1,194 +1,228 @@
-'use client';
+// File: src/components/stations/StationsTable.tsx
+// The table component's column definitions are updated to match the new schema.
 
-import { useMemo } from 'react';
+import React from 'react';
+import { Table, TableBody, TableHeader, TableRow, TableCell } from '@/components/ui/Table';
+import { useStationsTable } from '@/hooks/useStationsTable';
+import { useDebounce } from '@/hooks/useDebounce';
 import { GasStation } from '@/types/station';
-import { SortConfig, TableColumn, PaginationInfo } from '@/types/table';
-import { StationRow } from './StationRow';
-import { TableHeader } from './TableHeader';
-import { TablePagination } from './TablePagination';
-import { EmptyState } from './EmptyState';
-import { 
-  filterStations, 
-  sortStations, 
-  paginateResults 
-} from '@/lib/utils/tableUtils';
-import { formatPrice } from '@/lib/utils/stationUtils';
+import { formatDate } from '@/lib/utils/stationUtils';
+import { LuPencil, LuTrash, LuListFilter, LuArrowUp, LuArrowDown } from 'react-icons/lu';
+import  Button  from '@/components/ui/Button';
+import  Card  from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { StationForm } from '@/components/stations/StationForm';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
-interface StationsTableProps {
-  stations: GasStation[];
-  searchQuery: string;
-  sortConfig: SortConfig;
-  currentPage: number;
-  itemsPerPage: number;
-  onSort: (config: SortConfig) => void;
-  onPageChange: (page: number) => void;
-  onEdit: (station: GasStation) => void;
-  onDelete: (id: string) => Promise<void>;
+// Table column definition
+interface TableColumn {
+  key: keyof GasStation | 'actions' | string;
+  label: string;
+  sortable: boolean;
+  width: string;
 }
 
-export function StationsTable({
-  stations,
-  searchQuery,
-  sortConfig,
-  currentPage,
-  itemsPerPage,
-  onSort,
-  onPageChange,
-  onEdit,
-  onDelete
-}: StationsTableProps) {
-  
-  // Define table columns
-  const columns: TableColumn[] = [
-    {
-      key: 'Nom de Station',
-      label: 'Station Name',
-      sortable: true,
-      width: 'w-1/5'
-    },
-    {
-      key: 'Marque',
-      label: 'Brand',
-      sortable: true,
-      width: 'w-32'
-    },
-    {
-      key: 'Province',
-      label: 'Province',
-      sortable: true,
-      width: 'w-32'
-    },
-    {
-      key: 'Type',
-      label: 'Type',
-      sortable: true,
-      width: 'w-24'
-    },
-    {
-      key: 'Gérant',
-      label: 'Manager',
-      sortable: true,
-      width: 'w-32'
-    },
-    {
-      key: 'numéro de Téléphone',
-      label: 'Phone',
-      sortable: true,
-      width: 'w-32'
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      sortable: false,
-      width: 'w-32'
-    }
-  ];
-
-  // Process data with memoization
-  const processedData = useMemo(() => {
-    // Filter stations based on search query
-    let filtered = filterStations(stations, searchQuery);
-    
-    // Sort filtered results
-    let sorted = sortStations(filtered, sortConfig);
-    
-    // Calculate pagination info
-    const paginationInfo: PaginationInfo = {
-      currentPage,
-      totalItems: sorted.length,
-      itemsPerPage,
-      totalPages: Math.ceil(sorted.length / itemsPerPage),
-      startIndex: (currentPage - 1) * itemsPerPage,
-      endIndex: Math.min(currentPage * itemsPerPage, sorted.length)
-    };
-    
-    // Get paginated results
-    const paginated = paginateResults(sorted, currentPage, itemsPerPage);
-    
-    return {
-      stations: paginated,
-      pagination: paginationInfo,
-      hasResults: sorted.length > 0,
-      hasSearch: searchQuery.trim().length > 0
-    };
-  }, [stations, searchQuery, sortConfig, currentPage, itemsPerPage]);
-
-  const {
-    stations: paginatedStations,
-    pagination,
-    hasResults,
-    hasSearch
-  } = processedData;
-
-  // Handle sorting
-  const handleSort = (columnKey: string) => {
-    const newDirection = 
-      sortConfig.key === columnKey && sortConfig.direction === 'asc' 
-        ? 'desc' 
-        : 'asc';
-    
-    onSort({
-      key: columnKey,
-      direction: newDirection
-    });
-  };
-
-  // Show empty state if no results
-  if (!hasResults) {
-    return (
-      <EmptyState 
-        hasSearch={hasSearch}
-        searchQuery={searchQuery}
-        totalStations={stations.length}
-      />
-    );
+const columns: TableColumn[] = [
+  {
+    key: 'Nom de Station',
+    label: 'Station Name',
+    sortable: true,
+    width: 'w-1/5'
+  },
+  {
+    key: 'Marque',
+    label: 'Brand',
+    sortable: true,
+    width: 'w-32'
+  },
+  {
+    key: 'Province',
+    label: 'Province',
+    sortable: true,
+    width: 'w-32'
+  },
+  {
+    key: 'Type',
+    label: 'Type',
+    sortable: true,
+    width: 'w-24'
+  },
+  {
+    key: 'Gérant',
+    label: 'Manager',
+    sortable: true,
+    width: 'w-32'
+  },
+  {
+    key: 'numéro de Téléphone',
+    label: 'Phone',
+    sortable: false,
+    width: 'w-32'
+  },
+  {
+    key: 'actions',
+    label: 'Actions',
+    sortable: false,
+    width: 'w-32'
   }
+];
+
+export function StationsTable() {
+  const {
+    state: { paginatedData, loading, error, ui },
+    actions: { openAddForm, openEditForm, closeAddForm, closeEditForm, deleteStation, setSearchQuery, setSortConfig, setCurrentPage, refreshStations }
+  } = useStationsTable();
+  const debouncedSearch = useDebounce(ui.searchQuery, 300);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this station?')) {
+      try {
+        await deleteStation(id);
+        // Data will automatically update via the Firestore snapshot listener
+      } catch (err) {
+        alert('Failed to delete station. Please try again.');
+      }
+    }
+  };
+  
+  const renderRow = (station: GasStation) => (
+    <TableRow key={station.id}>
+      <TableCell className="font-medium text-gray-900">{station['Nom de Station']}</TableCell>
+      <TableCell>{station['Marque']}</TableCell>
+      <TableCell>{station['Province']}</TableCell>
+      <TableCell>{station['Type']}</TableCell>
+      <TableCell>{station['Gérant']}</TableCell>
+      <TableCell>{station['numéro de Téléphone']}</TableCell>
+      <TableCell className="flex items-center space-x-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => openEditForm(station)}
+          title="Edit"
+        >
+          <LuPencil />
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => handleDelete(station.id)}
+          title="Delete"
+        >
+          <LuTrash />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
 
   return (
-    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-      {/* Table Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Stations ({pagination.totalItems})
-          </h2>
-          <div className="text-sm text-gray-500">
-            Showing {pagination.startIndex + 1}-{pagination.endIndex} of {pagination.totalItems}
+    <Card className="relative p-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex items-center space-x-2">
+          <Input
+            placeholder="Search stations..."
+            value={ui.searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="md:w-64"
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="secondary"
+            onClick={refreshStations}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="primary"
+            onClick={openAddForm}
+          >
+            Add Station
+          </Button>
+        </div>
+      </div>
+
+      {loading && <div className="text-center py-8">Loading stations...</div>}
+      {error && <ErrorMessage error={error} />}
+
+      {!loading && !error && (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {columns.map(column => (
+                  <TableCell
+                    key={column.key}
+                    className={`font-semibold text-gray-700 cursor-pointer ${column.width}`}
+                    onClick={() => column.sortable && setSortConfig({
+                      key: column.key,
+                      direction: ui.sortConfig.key === column.key && ui.sortConfig.direction === 'asc' ? 'desc' : 'asc'
+                    })}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>{column.label}</span>
+                      {column.sortable && (
+                        ui.sortConfig.key === column.key
+                          ? (ui.sortConfig.direction === 'asc' ? <LuArrowUp /> : <LuArrowDown />)
+                          : <LuListFilter className="text-gray-400" />
+                      )}
+                    </div>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedData.map(renderRow)}
+            </TableBody>
+          </Table>
+          
+          {paginatedData.length === 0 && (
+            <div className="text-center text-gray-500 py-10">
+              No stations found.
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-6">
+            <span className="text-sm text-gray-600">
+              Page {ui.currentPage}
+            </span>
+            <div className="space-x-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setCurrentPage(ui.currentPage - 1)}
+                disabled={ui.currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setCurrentPage(ui.currentPage + 1)}
+                disabled={paginatedData.length < ui.itemsPerPage}
+              >
+                Next
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <TableHeader 
-            columns={columns}
-            sortConfig={sortConfig}
-            onSort={handleSort}
-          />
-          <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedStations.map((station) => (
-              <StationRow
-                key={station.id}
-                station={station}
-                columns={columns}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200">
-          <TablePagination 
-            pagination={pagination}
-            onPageChange={onPageChange}
-          />
-        </div>
+        </>
       )}
-    </div>
+
+      {/* Add/Edit Station Modal */}
+      <Modal
+        title={ui.showAddForm ? 'Add New Station' : 'Edit Station'}
+        isOpen={ui.showAddForm || !!ui.selectedStation}
+        onClose={ui.showAddForm ? closeAddForm : closeEditForm}
+      >
+        <StationForm
+          mode={ui.showAddForm ? 'create' : 'edit'}
+          station={ui.selectedStation || undefined}
+          onSuccess={ui.showAddForm ? closeAddForm : closeEditForm}
+          onCancel={ui.showAddForm ? closeAddForm : closeEditForm}
+        />
+      </Modal>
+    </Card>
   );
 }

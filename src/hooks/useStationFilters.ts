@@ -1,83 +1,86 @@
+// File: src/hooks/useStationFilters.ts
+// This hook is updated to filter by provinces instead of cities,
+// with all variable names and logic adjusted accordingly.
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { GasStation } from '@/types/station';
 import { StationFiltersState, StationFiltersActions } from '@/types/dashboard';
-import { extractUniqueCities } from '@/lib/utils/stationUtils';
-import { DEFAULT_CITY } from '@/lib/utils/constants';
+import { extractUniqueProvinces } from '@/lib/utils/stationUtils';
 
 export function useStationFilters(stations: GasStation[]): {
-  availableCities: string[];
-  selectedCities: string[];
+  availableProvinces: string[];
+  selectedProvinces: string[];
   filteredStations: GasStation[];
   actions: StationFiltersActions;
 } {
-  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
 
-  // Memoize available cities calculation
-  const availableCities = useMemo(() => {
-    return extractUniqueCities(stations);
+  // Memoize available provinces calculation
+  const availableProvinces = useMemo(() => {
+    return extractUniqueProvinces(stations);
   }, [stations]);
 
-  // Initialize selected cities when available cities change
+  // Initialize selected provinces when available provinces change
   useEffect(() => {
-    if (availableCities.length > 0) {
-      setSelectedCities(prevSelected => {
-        // If no previous selection, default to DEFAULT_CITY if available, otherwise all cities
+    if (availableProvinces.length > 0) {
+      setSelectedProvinces(prevSelected => {
+        // If no previous selection, default to 'Casablanca-Settat' if available, otherwise all provinces
         if (prevSelected.length === 0) {
-          return availableCities.includes(DEFAULT_CITY) 
-            ? [DEFAULT_CITY] 
-            : availableCities;
+          return availableProvinces.includes('Casablanca-Settat')
+            ? ['Casablanca-Settat']
+            : availableProvinces;
         }
 
-        // Filter out cities that are no longer available
-        const validSelected = prevSelected.filter(city => 
-          availableCities.includes(city)
+        // Filter out provinces that are no longer available
+        const validSelected = prevSelected.filter(province =>
+          availableProvinces.includes(province)
         );
 
-        // If no valid selections remain, select all available cities
-        return validSelected.length > 0 ? validSelected : availableCities;
+        // If no valid selections remain, select all available provinces
+        return validSelected.length > 0 ? validSelected : availableProvinces;
       });
     }
-  }, [availableCities]);
+  }, [availableProvinces]);
 
   // Memoize filtered stations
   const filteredStations = useMemo(() => {
-    if (selectedCities.length === 0) return [];
+    if (selectedProvinces.length === 0) return [];
     
-    return stations.filter(station => 
-      station.city && selectedCities.includes(station.city)
+    return stations.filter(station =>
+      station['Province'] && selectedProvinces.includes(station['Province'])
     );
-  }, [stations, selectedCities]);
+  }, [stations, selectedProvinces]);
 
   // Action handlers
-  const updateCityFilter = useCallback((city: string, isSelected: boolean) => {
-    setSelectedCities(prev => {
+  const updateProvinceFilter = useCallback((province: string, isSelected: boolean) => {
+    setSelectedProvinces(prev => {
       if (isSelected) {
-        return prev.includes(city) ? prev : [...prev, city];
+        return prev.includes(province) ? prev : [...prev, province];
       } else {
-        return prev.filter(c => c !== city);
+        return prev.filter(p => p !== province);
       }
     });
   }, []);
 
-  const selectAllCities = useCallback(() => {
-    setSelectedCities(availableCities);
-  }, [availableCities]);
+  const selectAllProvinces = useCallback(() => {
+    setSelectedProvinces(availableProvinces);
+  }, [availableProvinces]);
 
-  const clearAllCities = useCallback(() => {
-    setSelectedCities([]);
+  const clearAllProvinces = useCallback(() => {
+    setSelectedProvinces([]);
   }, []);
 
   const actions: StationFiltersActions = {
-    updateCityFilter,
-    selectAllCities,
-    clearAllCities
+    updateProvinceFilter,
+    selectAllProvinces,
+    clearAllProvinces
   };
 
   return {
-    availableCities,
-    selectedCities,
+    availableProvinces,
+    selectedProvinces,
     filteredStations,
     actions
   };

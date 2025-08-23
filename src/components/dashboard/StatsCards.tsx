@@ -1,106 +1,70 @@
-'use client';
+// File: src/components/dashboard/StatsCards.tsx
+// This component has been updated to remove price stats and
+// add capacity-related statistics based on the new schema.
 
-import { DashboardStats } from '@/types/dashboard';
-import { formatPrice, formatPercentage } from '@/lib/utils/stationUtils';
+import React from 'react';
 import  Card  from '@/components/ui/Card';
+import { GasStation } from '@/types/station';
+import { 
+  getUniqueBrands, 
+  getStationsByType, 
+  formatCapacity, 
+} from '@/lib/utils/stationUtils';
 
-interface StatsCardsProps {
-  stats: DashboardStats;
+interface StatsCardProps {
+  label: string;
+  value: string | number;
 }
 
-export function StatsCards({ stats }: StatsCardsProps) {
-  const {
-    total,
-    pricing,
-    breakdown
-  } = stats;
+function StatsCard({ label, value }: StatsCardProps) {
+  return (
+    <Card className="flex flex-col p-6 items-center text-center">
+      <p className="text-sm font-medium text-gray-500">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-blue-600">{value}</p>
+    </Card>
+  );
+}
 
-  const statsData = [
-    {
-      title: 'Total Stations',
-      value: total.stations.toString(),
-      subtitle: `${total.filtered} filtered`,
-      icon: '⛽',
-      color: 'blue'
-    },
-    {
-      title: 'Avg Diesel Price',
-      value: formatPrice(pricing.avgDieselPrice),
-      subtitle: 'Per liter',
-      icon: '🚗',
-      color: 'green'
-    },
-    {
-      title: 'Avg Gasoline 95',
-      value: formatPrice(pricing.avgGasoline95Price),
-      subtitle: 'Per liter',
-      icon: '⛽',
-      color: 'yellow'
-    },
-    {
-      title: 'Brands',
-      value: breakdown.brands.toString(),
-      subtitle: 'Different brands',
-      icon: '🏢',
-      color: 'purple'
-    },
-    {
-      title: 'With Shops',
-      value: breakdown.stationsWithShops.toString(),
-      subtitle: formatPercentage(breakdown.stationsWithShops, total.filtered),
-      icon: '🛒',
-      color: 'indigo'
-    },
-    {
-      title: 'Common Fuel',
-      value: breakdown.mostCommonFuelType || 'N/A',
-      subtitle: 'Most offered',
-      icon: '⛽',
-      color: 'pink'
-    }
-  ];
+interface StatsCardsProps {
+  allStations: GasStation[];
+}
 
-  const getColorClasses = (color: string) => {
-    const colorMap = {
-      blue: 'bg-blue-50 text-blue-700 border-blue-200',
-      green: 'bg-green-50 text-green-700 border-green-200',
-      yellow: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-      purple: 'bg-purple-50 text-purple-700 border-purple-200',
-      indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      pink: 'bg-pink-50 text-pink-700 border-pink-200'
-    };
-    return colorMap[color as keyof typeof colorMap] || colorMap.blue;
-  };
+export function StatsCards({ allStations }: StatsCardsProps) {
+  const totalStations = allStations.length;
+  const uniqueBrands = getUniqueBrands(allStations);
+  const serviceStations = getStationsByType(allStations, 'service');
+  const remplissageStations = getStationsByType(allStations, 'remplissage');
+
+  // Calculate total capacities
+  const totalGasoilCapacity = allStations.reduce((sum, station) => sum + (station['Capacité Gasoil'] || 0), 0);
+  const totalSSPCapacity = allStations.reduce((sum, station) => sum + (station['Capacité SSP'] || 0), 0);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-      {statsData.map((stat, index) => (
-        <Card key={index} className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center">
-                <div className={`
-                  w-10 h-10 rounded-lg flex items-center justify-center text-lg
-                  ${getColorClasses(stat.color)}
-                `}>
-                  {stat.icon}
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    {stat.title}
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {stat.subtitle}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <StatsCard
+        label="Total Stations"
+        value={totalStations}
+      />
+      <StatsCard
+        label="Total Brands"
+        value={uniqueBrands.length}
+      />
+      <StatsCard
+        label="Service Stations"
+        value={serviceStations.length}
+      />
+      <StatsCard
+        label="Remplissage Stations"
+        value={remplissageStations.length}
+      />
+      <StatsCard
+        label="Total Gasoil Capacity"
+        value={formatCapacity(totalGasoilCapacity)}
+      />
+      <StatsCard
+        label="Total SSP Capacity"
+        value={formatCapacity(totalSSPCapacity)}
+      />
     </div>
   );
 }

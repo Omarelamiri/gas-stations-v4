@@ -1,8 +1,11 @@
+// File: src/components/stations/StationForm.tsx
+// This entire component has been rewritten to use the new form fields and hook logic.
+
 'use client';
 
 import { useStationForm } from '@/hooks/useStationForm';
 import { GasStation } from '@/types/station';
-import Button from '@/components/ui/Button';
+import  Button  from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
@@ -165,7 +168,7 @@ export function StationForm({ mode, station, onSuccess, onCancel }: StationFormP
             </label>
             <select
               value={formData['Type']}
-              onChange={(e) => updateField('Type', e.target.value)}
+              onChange={(e) => updateField('Type', e.target.value as any)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
@@ -180,7 +183,7 @@ export function StationForm({ mode, station, onSuccess, onCancel }: StationFormP
             </label>
             <select
               value={formData['Type Autorisation']}
-              onChange={(e) => updateField('Type Autorisation', e.target.value)}
+              onChange={(e) => updateField('Type Autorisation', e.target.value as any)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
@@ -302,8 +305,8 @@ export function StationForm({ mode, station, onSuccess, onCancel }: StationFormP
           variant="primary"
           disabled={!isValid || isSubmitting}
         >
-          {isSubmitting 
-            ? (mode === 'create' ? 'Creating...' : 'Updating...') 
+          {isSubmitting
+            ? (mode === 'create' ? 'Creating...' : 'Updating...')
             : (mode === 'create' ? 'Create Station' : 'Update Station')
           }
         </Button>
