@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase/config';
 import { formDataToFirestore } from '@/lib/utils/stationTransformers';
 import { GasStationFormData } from '@/types/station';
 
-const COLLECTION = 'stations';
+const COLLECTION = 'gasStations';
 
 export function useStationCRUD() {
   const createStation = useCallback(async (form: GasStationFormData) => {
