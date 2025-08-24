@@ -4,7 +4,7 @@ import { db } from '@/lib/firebase/config';
 import { GasStation, GasStationFormData } from '@/types/station';
 import { docToStation, formDataToFirestore } from '@/lib/utils/stationTransformers';
 
-const COLLECTION = 'stations';
+const COLLECTION = 'gasStations';
 
 export function useStationCRUD() {
   async function createStation(data: GasStationFormData): Promise<string> {

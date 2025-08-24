@@ -6,7 +6,7 @@ import { GasStation } from '@/types/station';
 import { docToStation } from '@/lib/utils/stationTransformers';
 
 
-const COLLECTION = 'stations';
+const COLLECTION = 'gasStations';
 
 
 export function useGasStations() {
