@@ -1,29 +1,55 @@
 'use client';
-import { useEffect, useState } from 'react';
-import StationForm from '@/components/stations/StationForm';
-import { useStationCRUD } from '@/hooks/useStationCRUD';
+
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Card from '@/components/ui/Card';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { useGasStations } from '@/hooks/useGasStations';
+import { StationForm } from '@/components/stations/StationForm';
 import { GasStation } from '@/types/station';
 
-export default function GasStationDetail({ params }: { params: { id: string } }) {
-  const { getStation } = useStationCRUD();
-  const [station, setStation] = useState<GasStation | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function EditStationPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const { stations, loading, error } = useGasStations();
+  const [selected, setSelected] = useState<GasStation | null>(null);
 
   useEffect(() => {
-    (async () => {
-      const s = await getStation(params.id);
-      setStation(s);
-      setLoading(false);
-    })();
-  }, [getStation, params.id]);
+    if (!id) return;
+    const found = stations.find((s) => s.id === id) || null;
+    setSelected(found);
+  }, [id, stations]);
 
-  if (loading) return <div className="p-6">Chargement…</div>;
-  if (!station) return <div className="p-6">Station introuvable</div>;
+  if (!id || typeof id !== 'string') {
+    return <div className="p-6"><ErrorMessage message="ID de station invalide." /></div>;
+  }
+
+  if (loading) {
+    return <div className="p-6"><LoadingSpinner /></div>;
+  }
+
+  if (error) {
+    return <div className="p-6"><ErrorMessage message={error} /></div>;
+  }
+
+  if (!selected) {
+    return <div className="p-6"><ErrorMessage message="Station introuvable." /></div>;
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-semibold mb-4">Modifier la station</h1>
-      <StationForm mode="edit" station={station} />
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Modifier la station</h1>
+        <p className="text-sm text-gray-600">
+          {selected['Nom de Station']} — {selected['Marque']}
+        </p>
+      </div>
+
+      <Card>
+        {/* StationForm should internally use useStationForm(mode='edit', station) */}
+        <StationForm mode="edit" station={selected} />
+      </Card>
     </div>
   );
 }

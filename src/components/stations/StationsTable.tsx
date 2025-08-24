@@ -1,47 +1,55 @@
-'use client';
+import React from 'react';
 import { GasStation } from '@/types/station';
 import Button from '@/components/ui/Button';
+import { formatCapacity, formatDate } from '@/lib/utils/stationUtils';
 
-interface Props {
-  rows: GasStation[];
-  onEdit?: (row: GasStation) => void;
-  onDelete?: (row: GasStation) => void;
+interface StationsTableProps {
+  stations: GasStation[];
+  onEdit: (station: GasStation) => void;
+  onDelete: (station: GasStation) => void;
 }
 
-export default function StationsTable({ rows, onEdit, onDelete }: Props) {
+export function StationsTable({ stations, onEdit, onDelete }: StationsTableProps) {
   return (
-    <div className="overflow-x-auto border rounded-lg">
+    <div className="overflow-x-auto rounded-2xl border border-gray-200">
       <table className="min-w-full text-sm">
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-50 text-gray-700">
           <tr>
-            <th className="px-3 py-2 text-left">Nom</th>
+            <th className="px-3 py-2 text-left">Nom de Station</th>
             <th className="px-3 py-2 text-left">Marque</th>
-            <th className="px-3 py-2 text-left">Commune</th>
+            <th className="px-3 py-2 text-left">Gérant</th>
+            <th className="px-3 py-2 text-left">Téléphone</th>
             <th className="px-3 py-2 text-left">Province</th>
-            <th className="px-3 py-2 text-left">Type</th>
-            <th className="px-3 py-2 text-right">Gasoil</th>
-            <th className="px-3 py-2 text-right">SSP</th>
-            <th className="px-3 py-2">Actions</th>
+            <th className="px-3 py-2 text-left">Mise en service</th>
+            <th className="px-3 py-2 text-left">SSP</th>
+            <th className="px-3 py-2 text-left">Gasoil</th>
+            <th className="px-3 py-2"></th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t">
-              <td className="px-3 py-2">{r['Nom de Station']}</td>
-              <td className="px-3 py-2">{r['Marque']}</td>
-              <td className="px-3 py-2">{r['Commune']}</td>
-              <td className="px-3 py-2">{r['Province']}</td>
-              <td className="px-3 py-2">{r['Type']}</td>
-              <td className="px-3 py-2 text-right">{r['Capacité Gasoil'] ?? '-'}</td>
-              <td className="px-3 py-2 text-right">{r['Capacité SSP'] ?? '-'}</td>
+          {stations.map((s) => (
+            <tr key={s.id} className="border-t">
+              <td className="px-3 py-2">{s['Nom de Station']}</td>
+              <td className="px-3 py-2">{s['Marque']}</td>
+              <td className="px-3 py-2">{s['Gérant']}</td>
+              <td className="px-3 py-2">{s['numéro de Téléphone']}</td>
+              <td className="px-3 py-2">{s['Province']}</td>
+              <td className="px-3 py-2">{formatDate(s['Date Mise en service'])}</td>
+              <td className="px-3 py-2">{formatCapacity(s['Capacité SSP'])}</td>
+              <td className="px-3 py-2">{formatCapacity(s['Capacité Gasoil'])}</td>
               <td className="px-3 py-2">
-                <div className="flex gap-2 justify-center">
-                  {onEdit && <Button size="sm" onClick={() => onEdit(r)}>Edit</Button>}
-                  {onDelete && <Button size="sm" variant="danger" onClick={() => onDelete(r)}>Delete</Button>}
+                <div className="flex gap-2 justify-end">
+                  <Button size="sm" variant="secondary" onClick={() => onEdit(s)}>Modifier</Button>
+                  <Button size="sm" variant="danger" onClick={() => onDelete(s)}>Supprimer</Button>
                 </div>
               </td>
             </tr>
           ))}
+          {stations.length === 0 && (
+            <tr>
+              <td colSpan={9} className="px-3 py-8 text-center text-gray-500">Aucune station</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

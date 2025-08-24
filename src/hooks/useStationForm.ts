@@ -1,15 +1,19 @@
 'use client';
-import { useCallback, useMemo, useState } from 'react';
-import { GasStation, GasStationFormData } from '@/types/station';
-import { FormErrors, validateStationData } from '@/lib/validations/stationValidation';
-import { stationToFormData } from '@/lib/utils/stationTransformers';
-import { useStationCRUD } from './useStationCRUD';
 
-export function useStationForm(initial?: GasStation) {
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { GasStation, GasStationFormData } from '@/types/station';
+import { stationToFormData } from '@/lib/utils/stationTransformers';
+import { validateStationData } from '@/lib/validations/stationValidation';
+import { useStationCRUD } from '@/hooks/useStationCRUD';
+
+type Mode = 'create' | 'edit';
+
+export function useStationForm(mode: Mode, station?: GasStation) {
   const { createStation, updateStation } = useStationCRUD();
 
-  const [formData, setFormData] = useState<GasStationFormData>(() =>
-    initial ? stationToFormData(initial) : {
+  // Provide a fully-typed, empty form model
+  const empty: GasStationFormData = useMemo(
+    () => ({
       'Raison sociale': '',
       'Marque': '',
       'Nom de Station': '',
@@ -30,50 +34,74 @@ export function useStationForm(initial?: GasStation) {
       'Capacité Gasoil': '',
       'Capacité SSP': '',
       'numéro de Téléphone': '',
-    }
+    }),
+    []
   );
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [form, setForm] = useState<GasStationFormData>(
+    station ? stationToFormData(station) : empty
+  );
+  const [errors, setErrors] = useState<Partial<Record<keyof GasStationFormData | 'submit' | '__form', string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const setField = useCallback(<K extends keyof GasStationFormData>(key: K, value: GasStationFormData[K]) => {
-    setFormData((p) => ({ ...p, [key]: value }));
-    setErrors((e) => ({ ...e, [key]: undefined }));
-  }, []);
+  // Reset when switching record
+  useEffect(() => {
+    setForm(station ? stationToFormData(station) : empty);
+    setErrors({});
+  }, [station, empty]);
 
-  const validate = useCallback(() => {
-    const { isValid, errors } = validateStationData(formData);
-    setErrors(errors);
-    return isValid;
-  }, [formData]);
+  const updateField = useCallback(
+    (key: keyof GasStationFormData, value: string) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
 
-  const submitCreate = useCallback(async () => {
+  const submit = useCallback(async () => {
     setSubmitting(true);
-    try {
-      if (!validate()) return null;
-      const id = await createStation(formData);
-      return id;
-    } catch (e: any) {
-      setErrors((prev) => ({ ...prev, submit: e?.message ?? 'Erreur inconnue' }));
-      return null;
-    } finally {
+    setErrors({});
+
+    // ✅ Your validator expects GasStationFormData *only one argument*
+    const { isValid, errors: fieldErrors } = validateStationData(form);
+
+    if (!isValid) {
+      // fieldErrors is a Record<keyof GasStationFormData | 'submit', string>
+      const combinedMessage = Object.values(fieldErrors ?? {})
+        .filter(Boolean)
+        .join('\n');
+
+      setErrors({
+        ...fieldErrors,
+        __form: combinedMessage || 'Veuillez corriger les erreurs du formulaire.',
+      });
       setSubmitting(false);
-    }
-  }, [createStation, formData, validate]);
-
-  const submitUpdate = useCallback(async (id: string) => {
-    setSubmitting(true);
-    try {
-      if (!validate()) return false;
-      await updateStation(id, formData);
-      return true;
-    } catch (e: any) {
-      setErrors((prev) => ({ ...prev, submit: e?.message ?? 'Erreur inconnue' }));
       return false;
-    } finally {
-      setSubmitting(false);
     }
-  }, [formData, updateStation, validate]);
 
-  return { formData, setField, errors, submitting, submitCreate, submitUpdate };
+    try {
+      if (mode === 'create') {
+        await createStation(form); // your CRUD will transform for Firestore
+      } else if (mode === 'edit' && station?.id) {
+        await updateStation(station.id, form);
+      }
+      setSubmitting(false);
+      return true;
+    } catch (err) {
+      console.error(err);
+      setErrors({
+        __form: "Une erreur est survenue lors de l'enregistrement de la station.",
+      });
+      setSubmitting(false);
+      return false;
+    }
+  }, [form, mode, station, createStation, updateStation]);
+
+  return {
+    form,
+    errors,
+    submitting,
+    updateField,
+    submit,
+    setForm,
+  };
 }
