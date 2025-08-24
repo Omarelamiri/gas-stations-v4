@@ -1,4 +1,4 @@
-﻿
+﻿// src/components/dashboard/StationStats.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,8 +9,9 @@ export function StationStats() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'stations'), snapshot => {
+    const unsub = onSnapshot(collection(db, 'gasStations'), snapshot => {
       setCount(snapshot.size);
+      console.log('StationStats: Found', snapshot.size, 'stations');
     });
     return () => unsub();
   }, []);
