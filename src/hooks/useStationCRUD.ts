@@ -1,90 +1,30 @@
-// File: src/hooks/useStationCRUD.ts
-// CRUD operations are updated to use the new collection name and
-// the new data transformers.
-
 'use client';
-
-import { useCallback } from 'react';
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc 
-} from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { useAuth } from '@/lib/auth/provider';
-import { GasStation, NewGasStation } from '@/types/station';
-import { 
-  transformNewStationToFirestore, 
-  transformStationForUpdate 
-} from '@/lib/utils/stationTransformers';
-import { validateStationData } from '@/lib/validations/stationValidation';
+import { GasStation, GasStationFormData } from '@/types/station';
+import { docToStation, formDataToFirestore } from '@/lib/utils/stationTransformers';
+
+const COLLECTION = 'stations';
 
 export function useStationCRUD() {
-  const { currentUser } = useAuth();
-  const collectionName = 'gas-stations';
+  async function createStation(data: GasStationFormData): Promise<string> {
+    const ref = await addDoc(collection(db, COLLECTION), formDataToFirestore(data));
+    return ref.id;
+  }
 
-  const createStation = useCallback(async (stationData: NewGasStation): Promise<void> => {
-    if (!currentUser) throw new Error('User not authenticated');
+  async function updateStation(id: string, data: GasStationFormData): Promise<void> {
+    await setDoc(doc(db, COLLECTION, id), formDataToFirestore(data), { merge: true });
+  }
 
-    // Validate data
-    const validation = validateStationData(stationData);
-    if (!validation.isValid) {
-      throw new Error(validation.errors.join(', '));
-    }
+  async function deleteStation(id: string): Promise<void> {
+    await deleteDoc(doc(db, COLLECTION, id));
+  }
 
-    // Transform data for Firestore
-    const firestoreData = transformNewStationToFirestore(stationData, currentUser.uid);
+  async function getStation(id: string): Promise<GasStation | null> {
+    const snap = await getDoc(doc(db, COLLECTION, id));
+    if (!snap.exists()) return null;
+    return docToStation(snap.id, snap.data()!);
+  }
 
-    try {
-      await addDoc(collection(db, collectionName), firestoreData);
-    } catch (error) {
-      console.error('Error creating station:', error);
-      throw new Error('Failed to create station. Please try again.');
-    }
-  }, [currentUser]);
-
-  const updateStation = useCallback(async (
-    stationId: string, 
-    stationData: Partial<NewGasStation>
-  ): Promise<void> => {
-    if (!currentUser) throw new Error('User not authenticated');
-
-    // Validate data if provided
-    if (Object.keys(stationData).length > 0) {
-      const validation = validateStationData(stationData, false); // Partial validation
-      if (!validation.isValid) {
-        throw new Error(validation.errors.join(', '));
-      }
-    }
-
-    // Transform data for Firestore
-    const firestoreData = transformStationForUpdate(stationData);
-
-    try {
-      await updateDoc(doc(db, collectionName, stationId), firestoreData);
-    } catch (error) {
-      console.error('Error updating station:', error);
-      throw new Error('Failed to update station. Please try again.');
-    }
-  }, [currentUser]);
-
-  const deleteStation = useCallback(async (stationId: string): Promise<void> => {
-    if (!currentUser) throw new Error('User not authenticated');
-    if (!stationId) throw new Error('Station ID is required');
-
-    try {
-      await deleteDoc(doc(db, collectionName, stationId));
-    } catch (error) {
-      console.error('Error deleting station:', error);
-      throw new Error('Failed to delete station. Please try again.');
-    }
-  }, [currentUser]);
-
-  return {
-    createStation,
-    updateStation,
-    deleteStation,
-  };
+  return { createStation, updateStation, deleteStation, getStation };
 }

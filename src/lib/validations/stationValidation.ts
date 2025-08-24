@@ -1,73 +1,76 @@
-// File: src/lib/validations/stationValidation.ts
-// The validation logic has been updated to check for the new required fields
-// and ensure that number and date formats are correct before submission.
+import { GasStationFormData } from '@/types/station';
 
-import { NewGasStation } from '@/types/station';
 
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
+export type FormErrors = Partial<Record<keyof GasStationFormData | 'submit', string>>;
+
+
+export function validateStationData(data: GasStationFormData): { isValid: boolean; errors: FormErrors } {
+const errors: FormErrors = {};
+
+
+const required: (keyof GasStationFormData)[] = [
+'Raison sociale',
+'Marque',
+'Nom de Station',
+'Propriétaire',
+'Gérant',
+'CIN Gérant',
+'Adesse',
+'Latitude',
+'Longitude',
+'Commune',
+'Province',
+'Type',
+'Type Autorisation',
+'Date Creation',
+'numéro de création',
+];
+
+
+for (const key of required) {
+const v = data[key];
+if (v === undefined || v === null || String(v).trim() === '') {
+errors[key] = 'Champ obligatoire';
+}
 }
 
-export function validateStationData(
-  data: Partial<NewGasStation>,
-  requireAll: boolean = true
-): ValidationResult {
-  const errors: string[] = [];
-  const requiredFields: (keyof NewGasStation)[] = [
-    'Nom de Station',
-    'Adesse',
-    'Province',
-    'Gérant',
-    'numéro de création',
-    'numéro de Mise en service',
-    'Date Creation',
-    'Date Mise en service',
-    'Capacité Gasoil',
-    'Capacité SSP'
-  ];
 
-  // Required fields validation
-  for (const field of requiredFields) {
-    if (requireAll || data[field] !== undefined) {
-      if (!data[field] || String(data[field]).trim().length === 0) {
-        errors.push(`${field} is required`);
-      }
-    }
-  }
+const toNumber = (s: string) => (s === '' ? null : Number(String(s).replace(/,/g, '.')));
 
-  // Coordinate validation
-  if (data['Latitude'] !== undefined && data['Latitude'].trim() !== '') {
-    const lat = parseFloat(data['Latitude']);
-    if (isNaN(lat) || lat < -90 || lat > 90) {
-      errors.push('Latitude must be a valid number between -90 and 90');
-    }
-  }
 
-  if (data['Longitude'] !== undefined && data['Longitude'].trim() !== '') {
-    const lng = parseFloat(data['Longitude']);
-    if (isNaN(lng) || lng < -180 || lng > 180) {
-      errors.push('Longitude must be a valid number between -180 and 180');
-    }
-  }
+const lat = toNumber(data['Latitude']);
+if (lat === null || !Number.isFinite(lat) || lat < -90 || lat > 90) {
+errors['Latitude'] = 'Latitude invalide';
+}
 
-  // Capacity validation
-  if (data['Capacité Gasoil'] !== undefined && data['Capacité Gasoil'].trim() !== '') {
-    const capacity = parseFloat(data['Capacité Gasoil']);
-    if (isNaN(capacity) || capacity < 0) {
-      errors.push('Gasoil capacity must be a valid positive number');
-    }
-  }
 
-  if (data['Capacité SSP'] !== undefined && data['Capacité SSP'].trim() !== '') {
-    const capacity = parseFloat(data['Capacité SSP']);
-    if (isNaN(capacity) || capacity < 0) {
-      errors.push('SSP capacity must be a valid positive number');
-    }
-  }
+const lng = toNumber(data['Longitude']);
+if (lng === null || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+errors['Longitude'] = 'Longitude invalide';
+}
 
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+
+const g = toNumber(data['Capacité Gasoil']);
+if (data['Capacité Gasoil'] !== '' && (g === null || g < 0)) {
+errors['Capacité Gasoil'] = 'Capacité Gasoil invalide';
+}
+
+
+const ssp = toNumber(data['Capacité SSP']);
+if (data['Capacité SSP'] !== '' && (ssp === null || ssp < 0)) {
+errors['Capacité SSP'] = 'Capacité SSP invalide';
+}
+
+
+// Simple yyyy-mm-dd check for date strings if provided
+const looksLikeDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+if (data['Date Creation'] && !looksLikeDate(data['Date Creation'])) {
+errors['Date Creation'] = 'Format de date attendu: YYYY-MM-DD';
+}
+if (data['Date Mise en service'] && !looksLikeDate(data['Date Mise en service'])) {
+errors['Date Mise en service'] = 'Format de date attendu: YYYY-MM-DD';
+}
+
+
+return { isValid: Object.keys(errors).length === 0, errors };
 }

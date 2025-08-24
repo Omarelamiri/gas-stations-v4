@@ -5,6 +5,13 @@
 import { GasStation } from '@/types/station';
 
 /**
+ * Generate a label for a gas station
+ */
+
+export const stationLabel = (s: GasStation) => `${s['Nom de Station']} — ${s['Commune']}`;
+
+
+/**
  * Extract unique provinces from gas stations array
  */
 export function extractUniqueProvinces(stations: GasStation[]): string[] {
